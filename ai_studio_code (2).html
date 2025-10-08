@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Autoconcepto</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background: #f0f2f5; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; margin-bottom: 20px; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #3498db; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px; }
+        button:hover { background: #2980b9; }
+        .question { margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px; }
+        .options { display: flex; gap: 10px; margin-top: 10px; }
+        .option { flex: 1; text-align: center; }
+        .option input { display: none; }
+        .option label { display: block; padding: 10px; background: #e9ecef; border-radius: 5px; cursor: pointer; }
+        .option input:checked + label { background: #3498db; color: white; }
+        .error-message { color: #e74c3c; font-size: 0.9em; margin-top: -10px; margin-bottom: 10px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test de Autoconcepto de Tennessee</h1>
+        
+        <div class="user-info">
+            <div class="form-group">
+                <label for="age">Edad:</label>
+                <input type="number" id="age" min="12" max="25" placeholder="Tu edad (12-25 años)">
+                <div id="age-error" class="error-message">La edad debe estar entre 12 y 25 años.</div>
+            </div>
+        </div>
+        
+        <div class="test">
+            <p><strong>Instrucciones:</strong> Responde cada afirmación seleccionando:<br>
+            <strong>Nunca</strong> = Casi siempre FALSO para mí<br>
+            <strong>No</strong> = Generalmente FALSO para mí<br>
+            <strong>Sí</strong> = Generalmente VERDADERO para mí<br>
+            <strong>Siempre</strong> = Casi siempre VERDADERO para mí</p>
+            
+            <div id="questions-container">
+                <!-- Las preguntas se generan aquí -->
+            </div>
+            
+            <button onclick="calculateAndRedirect()">Calcular Resultados</button>
+        </div>
+    </div>
+
+    <script>
+        // Datos del test
+        const testData = [
+            {
+                category: "Autoconcepto Físico",
+                questions: [
+                    "Me gusta mi apariencia física.",
+                    "Mi salud es buena y me siento con energía.",
+                    "Soy tan atlético/a y coordinado/a como la mayoría.",
+                    "Hay cosas de mi cuerpo que me hacen sentir incómodo/a. (Invertida)"
+                ]
+            },
+            {
+                category: "Autoconcepto Moral",
+                questions: [
+                    "Soy una persona con buenos principios morales.",
+                    "Me importa ser una persona honesta y confiable.",
+                    "Me siento bien con mis creencias y valores.",
+                    "A veces me cuesta hacer lo correcto. (Invertida)"
+                ]
+            },
+            {
+                category: "Autoconcepto Personal",
+                questions: [
+                    "La mayoría de las veces, me agrado a mí mismo/a.",
+                    "Muchas veces me siento inseguro/a. (Invertida)",
+                    "Soy una persona valiosa.",
+                    "Siento que puedo controlar mi vida y mis decisiones."
+                ]
+            }
+        ];
+
+        // Generar preguntas
+        function generateQuestions() {
+            let html = '';
+            const optionLabels = ["Nunca", "No", "Sí", "Siempre"]; // Nuevas etiquetas
+            const optionValues = ["a", "b", "c", "d"]; // Los valores internos se mantienen
+
+            testData.forEach((category, catIndex) => {
+                html += `<h3>${category.category}</h3>`;
+                category.questions.forEach((question, qIndex) => {
+                    html += `
+                    <div class="question">
+                        <div>${qIndex + 1}. ${question}</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" id="q${catIndex}-${qIndex}-a" name="q${catIndex}-${qIndex}" value="${optionValues[0]}">
+                                <label for="q${catIndex}-${qIndex}-a">${optionLabels[0]}</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" id="q${catIndex}-${qIndex}-b" name="q${catIndex}-${qIndex}" value="${optionValues[1]}">
+                                <label for="q${catIndex}-${qIndex}-b">${optionLabels[1]}</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" id="q${catIndex}-${qIndex}-c" name="q${catIndex}-${qIndex}" value="${optionValues[2]}">
+                                <label for="q${catIndex}-${qIndex}-c">${optionLabels[2]}</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" id="q${catIndex}-${qIndex}-d" name="q${catIndex}-${qIndex}" value="${optionValues[3]}">
+                                <label for="q${catIndex}-${qIndex}-d">${optionLabels[3]}</label>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+            });
+            document.getElementById('questions-container').innerHTML = html;
+        }
+
+        // Calcular resultados y redirigir
+        function calculateAndRedirect() {
+            const ageInput = document.getElementById('age');
+            const age = parseInt(ageInput.value);
+            const ageError = document.getElementById('age-error');
+
+            if (isNaN(age) || age < 12 || age > 25) {
+                ageError.style.display = 'block';
+                alert('Por favor, ingresa una edad válida entre 12 y 25 años.');
+                return;
+            } else {
+                ageError.style.display = 'none';
+            }
+
+            let scores = {};
+            
+            for (let catIndex = 0; catIndex < testData.length; catIndex++) {
+                const category = testData[catIndex];
+                let categoryScore = 0;
+                for (let qIndex = 0; qIndex < category.questions.length; qIndex++) {
+                    const question = category.questions[qIndex];
+                    const selected = document.querySelector(`input[name="q${catIndex}-${qIndex}"]:checked`);
+                    
+                    if (!selected) {
+                        alert(`Por favor, responde todas las preguntas. Faltan en la categoría "${category.category}".`);
+                        return; // Detiene la ejecución si hay preguntas sin responder
+                    }
+                    
+                    const value = selected.value;
+                    let points = 0;
+                    
+                    if (question.includes('(Invertida)')) {
+                        points = value === 'a' ? 4 : value === 'b' ? 3 : value === 'c' ? 2 : 1;
+                    } else {
+                        points = value === 'a' ? 1 : value === 'b' ? 2 : value === 'c' ? 3 : 4;
+                    }
+                    
+                    categoryScore += points;
+                }
+                scores[category.category] = categoryScore;
+            }
+
+            // Guardar los resultados del test actual y la edad en localStorage para la siguiente página
+            localStorage.setItem('currentTestScores', JSON.stringify(scores));
+            localStorage.setItem('currentTestAge', age);
+
+            // Guardar los resultados en el historial de estadísticas
+            saveHistoricalResults(age, scores);
+
+            // Redirigir a la página de resultados
+            window.location.href = 'results.html';
+        }
+
+        // Guardar resultados en el historial (separado del test actual)
+        function saveHistoricalResults(age, scores) {
+            let stored = JSON.parse(localStorage.getItem('testResultsHistory')) || {};
+            if (!stored[age]) stored[age] = [];
+            stored[age].push(scores);
+            localStorage.setItem('testResultsHistory', JSON.stringify(stored));
+        }
+
+        // Inicializar
+        generateQuestions();
+    </script>
+</body>
+</html>
